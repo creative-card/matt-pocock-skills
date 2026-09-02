@@ -1,6 +1,6 @@
 ---
 name: setup-matt-pocock-skills
-description: "Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills."
+description: "Configure this repo for the engineering skills: set up its issue tracker, triage and complexity label vocabularies, and domain doc layout. Run once before first use of the other engineering skills."
 disable-model-invocation: true
 ---
 
@@ -10,6 +10,7 @@ Scaffold the per-repo configuration that the engineering skills assume:
 
 - **Issue tracker**: where issues live (GitHub by default; local markdown is also supported out of the box)
 - **Triage labels**: the strings used for the five canonical triage roles
+- **Complexity labels**: the `intelligence` and `reasoning` strings, and which model each level dispatches to
 - **Domain docs**: where `CONTEXT.md` and ADRs live, and the consumer rules for reading them
 
 This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
@@ -26,14 +27,14 @@ Look at the current repo to understand its starting state. Read whatever exists;
 - `docs/adr/` and any `src/*/docs/adr/` directories
 - `docs/agents/`: does this skill's prior output already exist?
 - `.scratch/`: a sign that a local-markdown issue tracker convention is already in use
-- Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
+- Are the `triage` and `to-tickets` skills installed? (a skill folder alongside this one, or the name in your available skills.) This decides whether Section B runs at all, and which half of it applies.
 - Monorepo signals: a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. These are present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
 
 ### 2. Present findings and ask
 
 Summarise what's present and what's missing. Then take the sections in order. One section, one answer, then the next.
 
-Lead each section with the recommended answer so the user can accept it in a word. Give a one-line explainer only when the choice genuinely branches; skip the section entirely when exploration already settled it (Section B when `triage` isn't installed, Section C when there's no monorepo).
+Lead each section with the recommended answer so the user can accept it in a word. Give a one-line explainer only when the choice genuinely branches; skip the section entirely when exploration already settled it (Section B when neither `triage` nor `to-tickets` is installed, Section C when there's no monorepo).
 
 **Section A: Issue tracker.**
 
@@ -48,13 +49,22 @@ Default posture: these skills were designed for GitHub. If a `git remote` points
 
 Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off**. Leave it off and don't raise it: a user who wants external PRs in the triage queue can flip the flag in the file later.
 
-**Section B: Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't installed (exploration told you), since an uninstalled skill needs no labels.
+**Section B: Label vocabularies.** Skip this section entirely if neither `triage` nor `to-tickets` is installed (exploration told you), since an uninstalled skill needs no labels. `triage` needs both halves below; `to-tickets` on its own needs only the complexity half.
 
-If it is installed, ask exactly one question:
+**B1, triage states** (only when `triage` is installed). Ask exactly one question:
 
 > Do you want to keep the default triage labels? (recommended: **yes**)
 
 The defaults are the five canonical roles, each label string equal to its name: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. On **yes**, write them as-is. Only if the user says no, usually because their tracker already uses other names (e.g. `bug:triage` for `needs-triage`), collect the overrides so `triage` applies existing labels instead of creating duplicates.
+
+**B2, complexity.** These say how much model an issue needs, on two axes judged independently: `intelligence` (how much capability the change needs) and `reasoning` (how much has to be worked out before the code is right). Ask one question:
+
+> Which model should each level dispatch to? (recommended: your frontier model for `high`, your mid model for `medium`, your light model for `low`)
+
+Write the seed template, then replace two things in it before showing the draft:
+
+- **The `intelligence: high` anchors.** The template ships placeholders. Fill them from what this repo actually is: the rules its `CLAUDE.md` / `AGENTS.md` says nothing enforces, and any area where a wrong answer fails silently rather than red. Generic anchors make the label unusable, because every issue looks like it might qualify.
+- **The dispatch table.** Use the models the user named. Leave the labels themselves abstract, so swapping models later is a one-line edit to this file rather than a relabel of the open backlog.
 
 **Section C: Domain docs.** Default to **single-context** (one `CONTEXT.md` + `docs/adr/` at the repo root). This fits almost every repo; write it without asking.
 
@@ -65,7 +75,7 @@ Offer **multi-context** (a root `CONTEXT-MAP.md` pointing to per-context `CONTEX
 Show the user a draft of:
 
 - The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, `docs/agents/triage-labels.md` (only when `triage` is installed), and `docs/agents/complexity-labels.md` (only when `triage` or `to-tickets` is installed)
 
 Let them edit before writing.
 
@@ -94,19 +104,24 @@ The block:
 
 [one-line summary of the label vocabulary]. See `docs/agents/triage-labels.md`.
 
+### Complexity labels
+
+[one-line summary of the two axes]. See `docs/agents/complexity-labels.md`.
+
 ### Domain docs
 
 [one-line summary of layout: "single-context" or "multi-context"]. See `docs/agents/domain.md`.
 ```
 
-Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
+Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and B1 ran. Include the `### Complexity labels` sub-block, and write `docs/agents/complexity-labels.md`, only when B2 ran. Omit each sub-block and its file together.
 
 Then write the docs files using the seed templates in this skill folder as a starting point:
 
 - [issue-tracker-github.md](./issue-tracker-github.md): GitHub issue tracker
 - [issue-tracker-gitlab.md](./issue-tracker-gitlab.md): GitLab issue tracker
 - [issue-tracker-local.md](./issue-tracker-local.md): local-markdown issue tracker
-- [triage-labels.md](./triage-labels.md): label mapping (only if `triage` is installed)
+- [triage-labels.md](./triage-labels.md): triage state label mapping (only if `triage` is installed)
+- [complexity-labels.md](./complexity-labels.md): the two complexity axes, their anchors, and the dispatch table (only if `triage` or `to-tickets` is installed)
 - [domain.md](./domain.md): domain doc consumer rules + layout
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.

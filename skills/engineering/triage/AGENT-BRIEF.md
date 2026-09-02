@@ -36,12 +36,19 @@ The agent needs to know when it's done. Every agent brief must have concrete, te
 
 State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.
 
+### The complexity pair, restated
+
+The brief repeats the `intelligence` and `reasoning` labels in its header so an agent picking the issue up sees what it was dispatched for, without a round-trip to the label list.
+
+Derive the pair from the brief you wrote, not from the issue as it arrived. A brief that names the interfaces, pins the edge cases, and bounds the scope has already done part of the thinking, and the pair should reflect that: **a sharper brief is a cheaper ticket.** If you can't lower the reasoning level after writing the brief, the brief probably still has a hole in it.
+
 ## Template
 
 ```markdown
 ## Agent Brief
 
 **Category:** bug / enhancement
+**Complexity:** intelligence: low|medium|high · reasoning: low|medium|high
 **Summary:** one-line description of what needs to happen
 
 **Current behavior:**
@@ -75,6 +82,7 @@ Be specific about edge cases and error conditions.
 ## Agent Brief
 
 **Category:** bug
+**Complexity:** intelligence: low · reasoning: low
 **Summary:** Skill description truncation drops mid-word, producing broken output
 
 **Current behavior:**
@@ -110,6 +118,7 @@ and append "..." to indicate truncation.
 ## Agent Brief
 
 **Category:** enhancement
+**Complexity:** intelligence: medium · reasoning: medium
 **Summary:** Add `.out-of-scope/` directory support for tracking rejected feature requests
 
 **Current behavior:**
@@ -153,6 +162,7 @@ For a PR, "Current behavior" describes the state of the diff, and the brief asks
 ## Agent Brief
 
 **Category:** enhancement
+**Complexity:** intelligence: low · reasoning: medium
 **Summary:** Finish the contributor's `--json` output flag for `triage list`
 
 **Current behavior:**
@@ -199,7 +209,7 @@ The function around line 150 has the issue.
 ```
 
 This is bad because:
-- No category
+- No category and no complexity pair, so nobody can route it
 - Vague description ("the triage thing is broken")
 - References file paths and line numbers that will go stale
 - No acceptance criteria
