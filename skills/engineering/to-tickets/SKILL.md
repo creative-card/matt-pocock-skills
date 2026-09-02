@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
-The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
+The issue tracker, the triage label vocabulary, and the complexity label vocabulary (`intelligence` and `reasoning`, each `low`/`medium`/`high`) should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
 ## Process
 
@@ -39,6 +39,13 @@ Give each ticket its **blocking edges**: the other tickets that must complete be
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
 
+Now score each ticket on the two complexity axes. You are in the best position to do this: you just decided where the seams go, so you know which slice carries the hard part. Judge the axes separately against the level definitions in the complexity label config.
+
+Two things fall out of slicing specifically:
+
+- **A `high` / `high` slice is usually a slice that's too big.** Try cutting it before accepting the pair. Often the tangled decision is one narrow thing, and pulling it into its own ticket leaves the rest cheap.
+- **Expand-contract migrate batches are the cheapest tickets you will ever write.** The expand ticket holds the design and scores accordingly; each migrate batch is a mechanical repeat of a shape already proven, so `reasoning: low` even when the batch is large. Sizing them by blast radius is what makes that true, so don't undo it by merging batches back together.
+
 ### 4. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each ticket, show:
@@ -46,12 +53,16 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 - **Title**: short descriptive name
 - **Blocked by**: which other tickets (if any) must complete first
 - **What it delivers**: the end-to-end behaviour this ticket makes work
+- **Complexity**: the `intelligence` and `reasoning` levels, with a short reason for each
 
 Ask the user:
 
 - Does the granularity feel right? (too coarse / too fine)
 - Are the blocking edges correct: does each ticket only depend on tickets that genuinely gate it?
 - Should any tickets be merged or split further?
+- Do the complexity pairs look right, given what the tickets will cost to run?
+
+Show the pairs as a column so the shape of the batch is visible at a glance. If every ticket came out `high` / `high`, say so rather than presenting it as a result: it means the breakdown didn't isolate the hard part, and that's a splitting problem, not a labelling one.
 
 Iterate until the user approves the breakdown.
 
@@ -59,8 +70,8 @@ Iterate until the user approves the breakdown.
 
 Publish the approved tickets. **How** depends on the tracker `/setup-matt-pocock-skills` configured; the tickets are the same either way, only the shape of the blocking edges changes:
 
-- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file. The complexity pair goes in the file as a line, since there are no labels to hang it on.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction. Apply the approved `intelligence` and `reasoning` labels alongside it, and if you're told to publish under a different state, drop the pair: it only means anything on `ready-for-agent`.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
@@ -75,6 +86,8 @@ Do NOT close or modify any parent issue.
 **Blocked by:** the numbers/titles of the tickets that gate this one, or "None (can start immediately)".
 
 **Status:** ready-for-agent
+
+**Complexity:** intelligence: low|medium|high · reasoning: low|medium|high
 
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2
@@ -99,6 +112,11 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 ## Blocked by
 
 - A reference to each blocking ticket, or "None (can start immediately)".
+
+## Complexity
+
+`intelligence: <level>` · `reasoning: <level>`, each with the one-line reason it landed there. This
+repeats the labels so an agent picking the ticket up sees what it was dispatched for.
 
 </issue-template>
 

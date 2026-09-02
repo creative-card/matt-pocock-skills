@@ -42,7 +42,16 @@ Every triaged issue should carry exactly one category role and one state role. I
 
 These are canonical role names. The actual label strings used in the issue tracker may differ. The mapping should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
+Two **complexity** axes ride alongside the state, on `ready-for-agent` issues only:
+
+- `intelligence`: how much model capability the change needs
+- `reasoning`: how much has to be worked out before the code is right
+
+Each takes `low`, `medium`, or `high`, and they are judged independently. The scale definitions, the codebase-specific anchors for each level, and the model each level dispatches to should have been provided to you as complexity label config; if they weren't, tell the user to run `/setup-matt-pocock-skills`. Without that config, don't invent a scale: say the pair is unroutable and move on.
+
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
+
+Any transition **off** `ready-for-agent` also removes the complexity pair. A pair left behind on a `needs-info` issue routes work that isn't ready yet, which is worse than no pair at all.
 
 ## Invocation
 
@@ -65,18 +74,20 @@ When PRs are in scope, include external PRs in these buckets and tag each line `
 
 Show counts and a one-line summary per item. Let the maintainer pick.
 
+When the maintainer instead asks what's ready for agents to pick up, list the `ready-for-agent` items grouped by complexity pair, cheapest first, and name the model each group dispatches to. That grouping is the point of the labels: it turns "here are nine issues" into three batches someone can launch. Call out any `ready-for-agent` item missing a pair as unroutable, and offer to derive one.
+
 ## Triage a specific issue or PR
 
 1. **Gather context.** Read the full issue or PR (body, comments, labels, author, dates; for a PR, the diff too). Parse any prior triage notes so you don't re-ask resolved questions. Explore the codebase using the project's domain glossary, respecting ADRs in the area. Run two checks against the codebase: (a) **redundancy**: search for an existing implementation of the requested behavior by domain concept (not just the request's wording), and report where you looked. If found, it's an already-implemented `wontfix` (step 5). (b) **prior rejection**: read `.out-of-scope/*.md` and surface any that resembles this request.
 
-2. **Recommend.** Tell the maintainer your category and state recommendation with reasoning, plus a brief codebase summary relevant to the request (including whether it's already implemented). Wait for direction.
+2. **Recommend.** Tell the maintainer your category and state recommendation with reasoning, plus a brief codebase summary relevant to the request (including whether it's already implemented). If you're recommending `ready-for-agent`, include the complexity pair and a one-line justification for each axis, drawn from what step 1 found in the codebase rather than from the issue's own wording: a reporter's "quick fix" lands in the RLS layer often enough. Wait for direction.
 
 3. **Verify the claim.** Before any grilling, check that the claim holds up. For a bug, reproduce it from the reporter's steps. For a PR, confirm the diff does what it claims: check it out, run the relevant tests or commands. Report what happened: confirmed (with code path), failed, or insufficient detail (a strong `needs-info` signal). A confirmed verification makes a much stronger agent brief.
 
 4. **Grill (if needed).** If the request needs fleshing out, call the Skill tool twice, for "grilling" and "domain-modeling", and grill it into shape a round of questions at a time, sharpening domain terms and updating `CONTEXT.md`/ADRs inline as decisions land.
 
 5. **Apply the outcome:**
-   - `ready-for-agent`: post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
+   - `ready-for-agent`: post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)), and apply both complexity labels. If step 4 grilled the issue, re-derive the pair against the brief you just wrote, not against the issue as it arrived: grilling removes ambiguity, so a ticket that was `reasoning: high` an hour ago is often `medium` now. Intelligence rarely moves, since the code didn't.
    - `ready-for-human`: same structure as an agent brief, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info`: post triage notes (template below).
    - For `wontfix`, close the issue, with the comment depending on *why*:
@@ -87,7 +98,9 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 ## Quick state override
 
-If the maintainer says "move #42 to ready-for-agent", trust them and apply the role directly. Confirm what you're about to do (role changes, comment, close), then act. Skip grilling. If moving to `ready-for-agent` without a grilling session, ask whether they want to write an agent brief.
+If the maintainer says "move #42 to ready-for-agent", trust them and apply the role directly. Confirm what you're about to do (role changes, comment, close), then act. Skip grilling. If moving to `ready-for-agent` without a grilling session, ask whether they want to write an agent brief, and propose a complexity pair in the same breath so the issue doesn't land in the agent queue unroutable. An override skips the grilling, not the pair.
+
+A maintainer can override either axis on its own ("make that one high intelligence"). Take it, and don't re-argue the other axis.
 
 ## Needs-info template
 
