@@ -22,6 +22,8 @@ You invoke this by typing `/triage` and then describing what you want in plain l
 
 `triage` reads and writes your issue tracker, so [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) must first configure that tracker and its label vocabulary. The role names below are **canonical**. The label strings in your tracker may differ, and setup provides the mapping. If your tracker already uses the canonical names exactly, you have nothing to map and nothing to set up.
 
+Setup also writes `docs/agents/complexity-labels.md`, the scale behind the complexity pair below. Without it, `triage` does not invent a scale: it tells you the pair is unroutable and moves on.
+
 The tracker config also decides whether external pull requests count as a request surface, and who counts as external. That flag is off by default, and setup no longer asks about it. To bring PRs into scope, turn it on in `docs/agents/issue-tracker.md`.
 
 ## The state machine
@@ -47,6 +49,19 @@ That is the whole vocabulary. The rule of exactly one state role per item keeps 
 | Rejected enhancement | A file in `.out-of-scope/`, linked from the closing comment, then close. |
 
 `.out-of-scope/` holds one markdown file per rejected **concept**, not per issue. Each file is a short design document, not a database row. It says what was rejected, why, and lists every issue that asked for it. `triage` reads the whole directory before it evaluates anything. It matches by concept, not keyword, so "night theme" matches `dark-mode.md`. When it finds a match, it shows you the old decision and asks if you still agree with it, instead of arguing the request again from the start.
+
+## The complexity pair
+
+A `ready-for-agent` issue carries two more labels beside its state. Together they say **how much model** the issue needs, so whoever dispatches it can pick a model and an effort level instead of always paying for the biggest one.
+
+| Axis | Measures | Example of `low` / `high` |
+| --- | --- | --- |
+| `intelligence` | How much capability the change needs: how subtle the area is, and how bad a plausible wrong answer would be | A user-facing string / a change where a mistake fails silently, like a permission check |
+| `reasoning` | How much has to be worked out before the code is right | A rename across forty files / a five-line fix to an ordering bug |
+
+Each axis takes `low`, `medium` or `high`, and `triage` judges them separately, because they come apart constantly. It proposes the pair in its recommendation, with a one-line reason per axis drawn from the codebase rather than the reporter's wording. After a grilling session it re-derives the pair against the brief: **a sharper brief is a cheaper ticket**, so `reasoning` often drops a level while `intelligence` stays put. Moving an issue off `ready-for-agent` removes the pair, since a pair on a `needs-info` issue would route work that isn't ready.
+
+Ask what's ready for agents and `triage` groups the `ready-for-agent` items by pair, cheapest first, naming the model each group dispatches to. That turns "nine issues" into a few batches you can launch.
 
 ## Verify before you brief
 
@@ -84,7 +99,10 @@ This is the most-filed gap on the skill. It comes in three forms:
 - Future work that is intended but waits on a trigger, so it is not actionable yet ([#297](https://github.com/mattpocock/skills/issues/297)).
 - A terminal state for "implemented, awaiting verification". Without it, an AFK runner can queue finished tickets again.
 
-The blocked case is accepted as real, but the name is undecided (`blocked` versus `paused`). None of it has shipped. As a workaround, people add a repo-local extra label next to the category. The state slot then holds an accurate value, but the skill does not know about the extra label. One community fork goes further and adds `needs-slicing`, `tracking` and effort labels. That works, but it belongs to that fork, not to the skill.
+The blocked case is accepted as real, but the name is undecided (`blocked` versus `paused`). None of it has shipped. As a workaround, people add a repo-local extra label next to the category. The state slot then holds an accurate value, but the skill does not know about the extra label. One community fork goes further and adds `needs-slicing` and `tracking` labels. That works, but it belongs to that fork, not to the skill.
+
+**Why two complexity labels instead of one difficulty score?**
+Because one score lands everything on `high`. A tricky pure function in an isolated module needs a lot of thought and little capability; a cross-package rename needs the reverse. Folding both into one number throws away the distinction that lets you run the cheap half of the backlog on a cheaper model.
 
 **How is this different from `/diagnosing-bugs`?**
 The verification step here is shallow on purpose. It answers "is this real, and roughly where does it live", and does not look for a root cause. If a bug does not reproduce from the reporter's steps in a few minutes, use `needs-info`, or use [diagnosing-bugs](https://aihero.dev/skills-diagnosing-bugs) if you want to investigate it now. Neither skill's text mentions the other yet. A user reported that gap, and it is still open.
@@ -99,6 +117,7 @@ Yes. The tracker is config, not a hard-coded assumption. People run it against L
 
 - Every item it touches ends with exactly one category role and one state role, never zero, and never two conflicting states.
 - It gives you a recommendation with reasoning and stops. It does not relabel the issue and move on.
+- Every `ready-for-agent` issue carries one `intelligence` and one `reasoning` label, each with a one-line reason, and no issue in any other state carries either.
 - It reproduced the bug, or checked out and ran the PR, before anything reached `ready-for-agent`.
 - The briefs it writes name types and behaviours, and contain no file paths and no line numbers.
 - When a request you rejected six months ago comes back, it tells you and quotes the old reason instead of triaging it again.
