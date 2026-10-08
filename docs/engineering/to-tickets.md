@@ -20,7 +20,7 @@ Tickets that `to-tickets` produced are agent-ready by construction. Don't run [t
 
 ## Prerequisites
 
-`to-tickets` publishes into a tracker, so [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) must have configured one for this repo, along with the triage-label vocabulary. Either kind works: a real tracker like GitHub or Linear, or local markdown files under `.scratch/`, which work with no extra setup.
+`to-tickets` publishes into a tracker, so [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) must have configured one for this repo, along with the triage-label vocabulary and the complexity-label scale in `docs/agents/complexity-labels.md`. Either kind works: a real tracker like GitHub or Linear, or local markdown files under `.scratch/`, which work with no extra setup.
 
 ## Tracer bullets, not layers
 
@@ -28,7 +28,7 @@ A **horizontal** slice ships one layer of the change. Nothing works until every 
 
 This is the rule people break most often. One team ran a 26-ticket stack sliced by layer (corpus, producer, aggregator, selector) and got roughly twenty agent runs per closed ticket, about three quarters of them rework. Their own post-mortem traced every failure class back to the horizontal slicing rather than to the implementations.
 
-Two things happen before anything is published. `to-tickets` looks for prefactoring (the principle "make the change easy, then make the easy change") and orders that work first. Then it presents the breakdown as a numbered list and quizzes you on it: is the granularity right, are the blocking edges real, should anything merge or split. Nothing reaches the tracker until you approve, and that quiz is the place to push back.
+Two things happen before anything is published. `to-tickets` looks for prefactoring (the principle "make the change easy, then make the easy change") and orders that work first. Then it presents the breakdown as a numbered list and quizzes you on it: is the granularity right, are the blocking edges real, should anything merge or split, do the complexity pairs look right. Nothing reaches the tracker until you approve, and that quiz is the place to push back.
 
 ## Blocking edges
 
@@ -40,6 +40,15 @@ The edges are the point of the artifact. They work in two ways, depending on the
 | A real tracker (GitHub, Linear) | Native blocking links, or sub-issues where the tracker has them | Any ticket whose blockers are done is on the **frontier** and can be grabbed |
 
 The edges live in the ticket either way. The tracker only decides whether anything can act on them in parallel. `to-tickets` produces the artifact; running it (one session at a time, or a fleet) is your job, not the skill's.
+
+## A complexity pair per slice
+
+Each ticket also gets a **complexity pair**: an `intelligence` level (how much capability the change needs) and a `reasoning` level (how much has to be worked out before the code is right), each `low`, `medium` or `high`. `to-tickets` scores them at slice time, because it has just decided where the seams go and knows which slice carries the hard part. On a real tracker the pair goes on as labels next to `ready-for-agent`; in local files it is a line in the ticket.
+
+The quiz shows the pairs as a column, so you see the shape of the batch at a glance. Two patterns come straight out of slicing:
+
+- **A `high` / `high` slice is usually too big.** The tangled decision is often one narrow thing, and cutting it into its own ticket leaves the rest cheap. If every ticket comes back `high` / `high`, the breakdown didn't isolate the hard part.
+- **Expand-contract migrate batches are cheap.** The expand ticket carries the design; each migrate batch repeats a proven shape, so it is `reasoning: low` however large it is.
 
 ## The wide-refactor exception
 
@@ -70,6 +79,9 @@ This is the same kind of problem, [reported in issue #513](https://github.com/ma
 **Where do the local tickets go? The v1.1 notes said a root-level `tickets.md`.**
 They did, and that was a bug. A single shared file also caused race conditions when parallel agents wrote to it. Local mode now writes one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, in dependency order, matching the layout the local tracker template already described. The `NN` prefix is a real ticket ID, so `/implement 03` works instead of retyping a long title.
 
+**Every ticket came out `high` / `high`.**
+That is a splitting problem, not a labelling one, and the skill is told to say so rather than publish it. Ask it to pull the hard decision into its own ticket. What's left usually drops to `medium` or `low` on at least one axis, which is what lets you run most of the batch on a cheaper model.
+
 **It kept truncating when it tried to read my spec.**
 A very large spec can outgrow what a tracker issue serves back cleanly. There is no local copy to fall back on, so the agent spends [tool calls](https://www.aihero.dev/ai-coding-dictionary/tool-call) fetching chunks again and never reaches the end. Don't [clear](https://www.aihero.dev/ai-coding-dictionary/clearing) or [compact](https://www.aihero.dev/ai-coding-dictionary/compaction) between `/to-spec` and `/to-tickets`. Run them in the same context window and the agent never has to fetch the spec back.
 
@@ -83,6 +95,7 @@ The skill stops at the artifact, and there is no auto-dispatch mode. Dispatch is
 
 - Every ticket has an answer to "what can I demo when this is done?", and the answer is behaviour, not a layer.
 - The list comes back to you numbered, with a "Blocked by" line on each, before anything is published.
+- The complexity pairs vary across the batch, and the expensive ones are the tickets you'd have guessed hold the hard part.
 - The ticket at the top has no blockers and can be started immediately.
 - Nothing in a ticket body is a file path or a line number, except a snippet a prototype produced.
 - Each ticket reads like something a fresh session could finish without you in the room.

@@ -1,6 +1,6 @@
 ## What it does
 
-`setup-matt-pocock-skills` answers three questions about one repo: where issues live, what the triage labels are called, and where the domain docs sit. It records the answers as markdown files under `docs/agents/`.
+`setup-matt-pocock-skills` answers four questions about one repo: where issues live, what the triage labels are called, which model each complexity level dispatches to, and where the domain docs sit. It records the answers as markdown files under `docs/agents/`.
 
 Those files are the only thing that varies between repos. The skills themselves are identical everywhere. They read `docs/agents/issue-tracker.md` at run time and do what it says. That is why the set is not tied to GitHub, and why you never edit a skill file to point it at another tracker. Invoking it with "link the skills to a custom issue tracker" works with anything you can connect to programmatically, with no changes to the skills.
 
@@ -21,19 +21,23 @@ It writes into the repo you run it in:
 | `issue-tracker.md` | `docs/agents/` |
 | `domain.md` | `docs/agents/` |
 | `triage-labels.md` | `docs/agents/`, only when the `triage` skill is installed |
+| `complexity-labels.md` | `docs/agents/`, only when `triage` or `to-tickets` is installed |
 | An `## Agent skills` block | whichever of `CLAUDE.md` or `AGENTS.md` already exists |
 
 You commit all of it as markdown. There is no user-level or global mode. The config lives in the repo, so every repo gets its own copy.
 
-## The three decisions
+## The decisions
 
-It starts each section with the recommended answer, and skips any question its exploration already answered. Most runs need only two confirmations.
+It starts each section with the recommended answer, and skips any question its exploration already answered. Most runs need only three confirmations.
 
 | Decision | What it proposes | When it asks |
 | --- | --- | --- |
 | **Issue tracker** | the one matching your `git remote` | always, because this is the one real choice |
 | **Triage labels** | keep the five canonical names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) | only if the `triage` skill is installed |
+| **Complexity labels** | your frontier model for `high`, your mid model for `medium`, your light model for `low` | only if `triage` or `to-tickets` is installed |
 | **Domain docs** | single-context: one `GLOSSARY.md` plus `docs/adr/` at the root | only if it spots monorepo signals, and then it offers a multi-context `GLOSSARY-MAP.md` |
+
+The complexity labels are two axes, `intelligence` and `reasoning`, that [triage](https://aihero.dev/skills-triage) and [to-tickets](https://aihero.dev/skills-to-tickets) put on every `ready-for-agent` issue. Besides the models, setup fills in the **anchors** for `intelligence: high` from this repo: the rules your `CLAUDE.md` says nothing enforces, and the areas where a wrong answer fails silently. The template's generic placeholders would make every issue look like it might qualify, which makes the label useless.
 
 The tracker options:
 
@@ -73,6 +77,10 @@ It doesn't. `docs/agents/triage-labels.md` is a *mapping*: it tells `/triage` wh
 
 No. It configures three things: tracker, labels, doc layout. Users have asked to make it the place for per-user preferences. The answer is that skills stay opinionated and take no per-user config. Preferences belong in your `CLAUDE.md` as plain instructions, which every skill already reads.
 
+**I switched models. Do I have to relabel my backlog?**
+
+No. The labels are abstract on purpose (`intelligence: high`, not a model name), and the dispatch table in `docs/agents/complexity-labels.md` maps each level to a model and an effort setting. Edit that table by hand; the open issues keep their labels and route to the new models.
+
 **Can I keep the config in `~/.claude` instead of committing it to every repo?**
 
 Not today. A user who runs the skills across many repos has an open request for this, but no user-level mode exists. Every repo carries its own `docs/agents/`.
@@ -83,7 +91,8 @@ One long-standing complaint says yes, in these words: *"having a skill to set up
 
 ## It's working if
 
-- `docs/agents/issue-tracker.md` and `docs/agents/domain.md` exist, plus `triage-labels.md` if `triage` is installed.
+- `docs/agents/issue-tracker.md` and `docs/agents/domain.md` exist, plus `triage-labels.md` if `triage` is installed and `complexity-labels.md` if `triage` or `to-tickets` is.
+- The `intelligence: high` anchors in `complexity-labels.md` name real areas of this repo, not the template's placeholders.
 - An `## Agent skills` section appears in the instruction file your harness reads, with a one-line summary pointing at each of those files.
 - The tracker it proposed matches the remote you use, and the label strings match labels that exist in your tracker.
 - Afterwards, `/to-tickets` publishes without asking you where issues live, and `/triage` applies labels rather than inventing them.
@@ -91,4 +100,4 @@ One long-standing complaint says yes, in these words: *"having a skill to set up
 
 ## Where it fits
 
-`setup-matt-pocock-skills` is the **run-once setup** for the engineering flow, the precondition everything else assumes rather than a step in the chain. Its neighbours are its readers: [triage](https://aihero.dev/skills-triage), which applies the label vocabulary written here; [to-spec](https://aihero.dev/skills-to-spec) and [to-tickets](https://aihero.dev/skills-to-tickets), which publish into the tracker named here; and [wayfinder](https://aihero.dev/skills-wayfinder), which reads the "Wayfinding operations" section of the same tracker file to learn how to store maps and child [tickets](https://www.aihero.dev/ai-coding-dictionary/ticket). [domain-modeling](https://aihero.dev/skills-domain-modeling) later fills in the domain-doc layout that setup records. It creates `GLOSSARY.md` and ADRs only when you resolve a term or decision, so a repo with no domain docs after setup is normal. For which skill to reach for next, [ask-matt](https://aihero.dev/skills-ask-matt) routes the whole set.
+`setup-matt-pocock-skills` is the **run-once setup** for the engineering flow, the precondition everything else assumes rather than a step in the chain. Its neighbours are its readers: [triage](https://aihero.dev/skills-triage), which applies the triage and complexity labels written here; [to-spec](https://aihero.dev/skills-to-spec) and [to-tickets](https://aihero.dev/skills-to-tickets), which publish into the tracker named here; and [wayfinder](https://aihero.dev/skills-wayfinder), which reads the "Wayfinding operations" section of the same tracker file to learn how to store maps and child [tickets](https://www.aihero.dev/ai-coding-dictionary/ticket). [domain-modeling](https://aihero.dev/skills-domain-modeling) later fills in the domain-doc layout that setup records. It creates `GLOSSARY.md` and ADRs only when you resolve a term or decision, so a repo with no domain docs after setup is normal. For which skill to reach for next, [ask-matt](https://aihero.dev/skills-ask-matt) routes the whole set.
