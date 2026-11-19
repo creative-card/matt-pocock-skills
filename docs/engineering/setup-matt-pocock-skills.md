@@ -79,7 +79,7 @@ No. It configures three things: tracker, labels, doc layout. Users have asked to
 
 **I switched models. Do I have to relabel my backlog?**
 
-No. The labels are abstract on purpose (`intelligence: high`, not a model name), and the dispatch table in `docs/agents/complexity-labels.md` maps each level to a model and an effort setting. Edit that table by hand; the open issues keep their labels and route to the new models.
+No, and for a new version of the same model you don't even edit anything. The dispatch table in `docs/agents/complexity-labels.md` names model families by alias (`opus`, not a dated id), so a new release is picked up automatically. Moving a level to a different family is one edit to that table; the labels are abstract on purpose (`intelligence: high`, not a model name), so the open issues keep their labels and route to the new models.
 
 **Can I keep the config in `~/.claude` instead of committing it to every repo?**
 

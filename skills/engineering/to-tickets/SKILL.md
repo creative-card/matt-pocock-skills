@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
-The issue tracker, the triage label vocabulary, and the complexity label vocabulary (`intelligence` and `reasoning`, each `low`/`medium`/`high`) should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
+The issue tracker, the triage label vocabulary, and the complexity label vocabulary (`intelligence` as `low`/`medium`/`high`/`ultra-high`, `reasoning` as `low`/`medium`/`high`) should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
 ## Process
 
@@ -43,7 +43,7 @@ Now score each ticket on the two complexity axes. You are in the best position t
 
 Two things fall out of slicing specifically:
 
-- **A `high` / `high` slice is usually a slice that's too big.** Try cutting it before accepting the pair. Often the tangled decision is one narrow thing, and pulling it into its own ticket leaves the rest cheap.
+- **A `high` / `high` slice, or any `ultra-high` one, is usually a slice that's too big.** Try cutting it before accepting the pair. Often the tangled decision is one narrow thing, and pulling it into its own ticket leaves the rest cheap.
 - **Expand-contract migrate batches are the cheapest tickets you will ever write.** The expand ticket holds the design and scores accordingly; each migrate batch is a mechanical repeat of a shape already proven, so `reasoning: low` even when the batch is large. Sizing them by blast radius is what makes that true, so don't undo it by merging batches back together.
 
 ### 4. Quiz the user
@@ -87,7 +87,7 @@ Do NOT close or modify any parent issue.
 
 **Status:** ready-for-agent
 
-**Complexity:** intelligence: low|medium|high · reasoning: low|medium|high
+**Complexity:** intelligence: low|medium|high|ultra-high · reasoning: low|medium|high
 
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2

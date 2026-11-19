@@ -61,12 +61,12 @@ The defaults are the five canonical roles, each label string equal to its name: 
 
 **B2, complexity.** These say how much model an issue needs, on two axes judged independently: `intelligence` (how much capability the change needs) and `reasoning` (how much has to be worked out before the code is right). Ask one question:
 
-> Which model should each level dispatch to? (recommended: your frontier model for `high`, your mid model for `medium`, your light model for `low`)
+> Which model should each level dispatch to? (recommended: your strongest model for `ultra-high`, your frontier model for `high`, your mid model for `medium`, your light model for `low`)
 
 Write the seed template, then replace two things in it before showing the draft:
 
 - **The `intelligence: high` anchors.** The template ships placeholders. Fill them from what this repo actually is: the rules its `CLAUDE.md` / `AGENTS.md` says nothing enforces, and any area where a wrong answer fails silently rather than red. Generic anchors make the label unusable, because every issue looks like it might qualify.
-- **The dispatch table.** Use the models the user named. Leave the labels themselves abstract, so swapping models later is a one-line edit to this file rather than a relabel of the open backlog.
+- **The dispatch table.** Use the models the user named, written as family aliases (`opus`, not a dated id) wherever the harness resolves them, so a new release applies without an edit. Leave the labels themselves abstract, so swapping models later is a one-line edit to this file rather than a relabel of the open backlog.
 
 **Section C: Domain docs.** Default to **single-context** (one `GLOSSARY.md` + `docs/adr/` at the repo root). This fits almost every repo; write it without asking.
 

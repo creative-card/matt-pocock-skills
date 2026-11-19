@@ -43,11 +43,11 @@ The edges live in the ticket either way. The tracker only decides whether anythi
 
 ## A complexity pair per slice
 
-Each ticket also gets a **complexity pair**: an `intelligence` level (how much capability the change needs) and a `reasoning` level (how much has to be worked out before the code is right), each `low`, `medium` or `high`. `to-tickets` scores them at slice time, because it has just decided where the seams go and knows which slice carries the hard part. On a real tracker the pair goes on as labels next to `ready-for-agent`; in local files it is a line in the ticket.
+Each ticket also gets a **complexity pair**: an `intelligence` level (how much capability the change needs) and a `reasoning` level (how much has to be worked out before the code is right), each `low`, `medium` or `high`, with a rare `ultra-high` on intelligence for a slice whose design is still the open question. `to-tickets` scores them at slice time, because it has just decided where the seams go and knows which slice carries the hard part. On a real tracker the pair goes on as labels next to `ready-for-agent`; in local files it is a line in the ticket.
 
 The quiz shows the pairs as a column, so you see the shape of the batch at a glance. Two patterns come straight out of slicing:
 
-- **A `high` / `high` slice is usually too big.** The tangled decision is often one narrow thing, and cutting it into its own ticket leaves the rest cheap. If every ticket comes back `high` / `high`, the breakdown didn't isolate the hard part.
+- **A `high` / `high` slice, or any `ultra-high` one, is usually too big.** The tangled decision is often one narrow thing, and cutting it into its own ticket leaves the rest cheap. If every ticket comes back `high` / `high`, the breakdown didn't isolate the hard part.
 - **Expand-contract migrate batches are cheap.** The expand ticket carries the design; each migrate batch repeats a proven shape, so it is `reasoning: low` however large it is.
 
 ## The wide-refactor exception
