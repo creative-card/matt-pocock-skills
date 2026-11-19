@@ -48,7 +48,7 @@ Derive the pair from the brief you wrote, not from the issue as it arrived. A br
 ## Agent Brief
 
 **Category:** bug / enhancement
-**Complexity:** intelligence: low|medium|high · reasoning: low|medium|high
+**Complexity:** intelligence: low|medium|high|ultra-high · reasoning: low|medium|high
 **Summary:** one-line description of what needs to happen
 
 **Current behavior:**

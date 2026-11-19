@@ -47,7 +47,7 @@ Two **complexity** axes ride alongside the state, on `ready-for-agent` issues on
 - `intelligence`: how much model capability the change needs
 - `reasoning`: how much has to be worked out before the code is right
 
-Each takes `low`, `medium`, or `high`, and they are judged independently. The scale definitions, the codebase-specific anchors for each level, and the model each level dispatches to should have been provided to you as complexity label config; if they weren't, tell the user to run `/setup-matt-pocock-skills`. Without that config, don't invent a scale: say the pair is unroutable and move on.
+`intelligence` takes `low`, `medium`, `high`, or `ultra-high`; `reasoning` takes `low`, `medium`, or `high`. They are judged independently. The scale definitions, the codebase-specific anchors for each level, and the model each level dispatches to should have been provided to you as complexity label config; if they weren't, tell the user to run `/setup-matt-pocock-skills`. Without that config, don't invent a scale: say the pair is unroutable and move on.
 
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 

@@ -19,6 +19,7 @@ You invoke this by typing `/implement-spec`, and the agent won't reach for it on
 
 - **An issue tracker.** The skill reads the tickets from, and resolves them on, the tracker [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) configured. If none has been configured, it stops and tells you to run that first rather than guessing.
 - **Tickets with blocking edges**, as [to-tickets](https://aihero.dev/skills-to-tickets) writes them. Without edges the graph is flat and every ticket starts at once.
+- **Complexity labels on the tickets**, as [to-tickets](https://aihero.dev/skills-to-tickets) and [triage](https://aihero.dev/skills-triage) apply them, and the dispatch table [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) writes. Without them the orchestrator judges each ticket's model and effort itself, which works but is harder to audit.
 - **A [harness](https://www.aihero.dev/ai-coding-dictionary/harness) that runs subagents in the background and gives each one a git worktree.** The skill exists to run tickets at the same time, so on a harness that runs subagents one at a time, it is only a slower `implement`.
 
 ## The integration branch
@@ -32,6 +33,19 @@ Everything lands on one branch. Each implementer:
 The tracker decides whether a pull request exists at all. If your tracker closes work through PRs, or you ask for one, the skill opens a draft PR after the first merge and marks it ready at the end. Otherwise the run stops on the integration branch with every ticket resolved the way your tracker closes work, which works fully offline against a local markdown tracker.
 
 Implementers talk to the orchestrator through [context pointers](https://www.aihero.dev/ai-coding-dictionary/context-pointer) (the spec, the ticket, shared exploration notes, earlier commits) rather than pasted summaries. This keeps each subagent's prompt small and leaves room in the orchestrator's window for the graph.
+
+## Running unattended
+
+The run is **autonomous**. You should come back to a finished integration branch, not a queue of questions, so the orchestrator makes three kinds of call on its own:
+
+| Situation | What the orchestrator does |
+| --- | --- |
+| Choosing a model for a subagent | Dispatches each implementer at the model and effort its ticket's complexity pair maps to, and the helpers (merger, explorer) at the smallest model that does the job. When the subscription hits a usage limit it waits for the reset instead of downgrading. |
+| A `ready-for-human` ticket that needs a judgement call | Grills it against a **proxy**: a subagent that answers as you would, from your memory files, the wiki, the ADRs and the glossary. The ticket gets an agent brief and joins the frontier. |
+| A `ready-for-human` ticket that needs your hands (credentials, a dashboard, manual testing) | Leaves it for you and names it in the final report. |
+| A **critical decision**: hard to reverse, outward-facing, security-sensitive, against a recorded decision, or changing the plan | Holds only the tickets that depend on it, keeps the rest moving, and asks you with options and a recommendation. |
+
+Every other decision is recorded on its ticket, and the proxy's answers that had no source behind them are marked as **guesses** and listed in the final report. Read that list first: it is where the run most likely went somewhere you wouldn't have.
 
 ## Common questions
 
@@ -74,6 +88,8 @@ A worktree holds only what git tracks. Tests that read gitignored fixtures, loca
 - Every ticket's trace shows `tdd` running, with a failing test before the code.
 - Merges into the integration branch are fast-forwards, not conflict resolutions.
 - The run ends on one branch with every ticket resolved, and a PR only if your tracker wanted one.
+- Implementers run at different models and efforts, matching their tickets' complexity pairs, rather than all at the most expensive one.
+- You hear from the run only about critical decisions, and the final report lists the proxy's guesses for you to check.
 
 ## Where it fits
 
