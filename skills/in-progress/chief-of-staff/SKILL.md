@@ -23,6 +23,14 @@ Use background agents so you can stay in active dialogue with the user. Start ev
 
 Communication to and from subagents should be sparse. Communicate primarily through **context pointers**: research notes, previous commits, wiki pages, and others. Don't duplicate information already available via pointers.
 
+Every subagent spends the user's subscription. Dispatch each one at the model and effort its work needs, following **Dispatching within the budget** in `../implement-spec/SKILL.md`: a ticket by its complexity pair, other work by the same two questions.
+
+## Autonomy
+
+Work as autonomously as you can. Loop the user in only on a **critical decision**, as **Looping the user in** in `../implement-spec/SKILL.md` defines it, and keep everything that doesn't depend on it moving while you wait. Every other decision you make, file in the wiki with its reason.
+
+When the user answers an escalation or corrects a decision, ingest it as a user preference. Those pages are what the proxy reads, so each answer is one the proxy can give next time.
+
 ## Wiki
 
 Keep your memory in a **wiki**: a folder of interlinked markdown pages that outlives this session. Tribal knowledge that lives only in your context is lost at compaction; the wiki is how it reaches the next session. Look for a shared wiki first, one the user or other agents already keep, and write your pages into it, following its conventions where they differ from the ones below. Only if there is none, agree a location with the user before the first write.
@@ -51,6 +59,7 @@ The wiki is a historical record. It never claims to describe how things are now,
 Some procedures you run live in other skills, installed beside this one. To run one, read its `SKILL.md` at the path below, relative to this skill's directory, and follow it.
 
 - **Retro** (`../retro/SKILL.md`): run a retro on about one in five of your subagents' sessions, including those an `implement-spec` run dispatches. Pick first the ones where something went wrong. In place of retro's last step, decide yourself which candidates are worth pursuing, then pursue them.
+- **`ready-for-human` issues**: grill each one through a proxy, following **Proxy grilling** in `../implement-spec/SKILL.md`, and point the proxy at the wiki's user preference and decision pages first.
 - **Large chunks of work**: write a spec with `../to-spec/SKILL.md`, break it into tickets with `../to-tickets/SKILL.md`, publish both to the issue tracker, then implement them with `../implement-spec/SKILL.md`.
 
 ## Strategic View
